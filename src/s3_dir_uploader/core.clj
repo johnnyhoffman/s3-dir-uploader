@@ -16,9 +16,11 @@
         objects (:object-summaries resp)
         truncated? (:truncated? resp)]
     (doseq [object objects]
-      (s3/delete-object creds 
+      (do
+        (println (str "Deleting '" (:key object) "' from bucket '" bucket-exists "'."))
+        (s3/delete-object creds 
                         :key (:key object)
-                        :bucket-name  bucket-name))
+                        :bucket-name  bucket-name)))
     ;; recur when not all results were returned by first listing
     (if truncated?
       (empty-bucket creds bucket-name))))
@@ -73,7 +75,7 @@
           (println (str "Creating bucket '" bucket-name "'."))
           (s3/create-bucket creds bucket-name) 
           (upload-to-bucket creds bucket-name dir))))
-    (catch Exception e (str "caught exception: " (.getMessage e))))
+    (catch Exception e (println (str "Error: " (.getMessage e)))))
   (print "Press enter to close")
   (flush)
   (read-line))
