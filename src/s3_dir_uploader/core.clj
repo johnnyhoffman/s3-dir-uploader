@@ -57,22 +57,23 @@
       input)))
 
 (defn -main [& args]
-  (read-line)
-  (let [config (read-string (slurp "config.clj"))
-        creds (:credentials config)
-        bucket-name (:bucket-name config)
-        bucket-name (get-alternate-bucket-name bucket-name)
-        dir (:directory config)]
-    (println (str "Checking if bucket '" bucket-name "' exists."))
-    (if (bucket-exists creds bucket-name)
-      (if (confirm (str "Bucket exists. Are you sure it is okay to empty the bucket '" bucket-name "? [Y] "))
-        (do (empty-bucket creds bucket-name)
-            (upload-to-bucket creds bucket-name dir))
-        (println "Aborting."))
-      (do 
-        (println (str "Creating bucket '" bucket-name "'."))
-        (s3/create-bucket creds bucket-name) 
-        (upload-to-bucket creds bucket-name dir))))
+  (try 
+    (let [config (read-string (slurp "config.clj"))
+          creds (:credentials config)
+          bucket-name (:bucket-name config)
+          bucket-name (get-alternate-bucket-name bucket-name)
+          dir (:directory config)]
+      (println (str "Checking if bucket '" bucket-name "' exists."))
+      (if (bucket-exists creds bucket-name)
+        (if (confirm (str "Bucket exists. Are you sure it is okay to empty the bucket '" bucket-name "? [Y] "))
+          (do (empty-bucket creds bucket-name)
+              (upload-to-bucket creds bucket-name dir))
+          (println "Aborting."))
+        (do 
+          (println (str "Creating bucket '" bucket-name "'."))
+          (s3/create-bucket creds bucket-name) 
+          (upload-to-bucket creds bucket-name dir))))
+    (catch Exception e (str "caught exception: " (.getMessage e))))
   (print "Press enter to close")
   (flush)
   (read-line))
